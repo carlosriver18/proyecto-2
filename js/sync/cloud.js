@@ -122,7 +122,17 @@ function scheduleDebouncedPush() {
   }, PUSH_DEBOUNCE_MS);
 }
 
+// Cancela cualquier subida automática pendiente. Se llama al principio de
+// toda operación explícita de sincronización para evitar una carrera donde
+// una subida programada por una edición anterior se cuela durante (o justo
+// después de) un "Restaurar desde la nube" y deshace la restauración.
+function cancelPendingPush() {
+  clearTimeout(pushTimer);
+  pushTimer = null;
+}
+
 export async function pushNow() {
+  cancelPendingPush();
   if (!client || !currentUser) return;
   if (!navigator.onLine) {
     setStatus('offline');
@@ -142,34 +152,74 @@ export async function pushNow() {
   setStatus('synced');
 }
 
-async function pullAndMerge() {
-  if (!client || !currentUser) return;
-  if (!navigator.onLine) {
-    setStatus('offline');
-    return;
-  }
+async function fetchRemoteRow() {
   const { data, error } = await client
     .from(TABLE)
     .select('data, updated_at')
     .eq('user_id', currentUser.id)
     .maybeSingle();
+  if (error) throw error;
+  return data;
+}
 
-  if (error) {
-    setStatus('error', error.message);
+function adoptRemote(row) {
+  setState(() => ({ ...row.data, meta: { updatedAt: row.updated_at } }), { touch: false });
+}
+
+async function pullAndMerge() {
+  if (!client || !currentUser) return;
+  cancelPendingPush();
+  if (!navigator.onLine) {
+    setStatus('offline');
     return;
   }
-  if (!data) {
+  let row;
+  try {
+    row = await fetchRemoteRow();
+  } catch (err) {
+    setStatus('error', err.message);
+    return;
+  }
+  if (!row) {
     await pushNow();
     return;
   }
 
   const localUpdatedAt = getState().meta?.updatedAt || null;
-  const remoteIsNewer = !localUpdatedAt || new Date(data.updated_at) > new Date(localUpdatedAt);
+  const remoteIsNewer = !localUpdatedAt || new Date(row.updated_at) > new Date(localUpdatedAt);
 
   if (remoteIsNewer) {
-    setState(() => ({ ...data.data, meta: { updatedAt: data.updated_at } }), { touch: false });
+    adoptRemote(row);
     setStatus('synced');
   } else {
     await pushNow();
   }
+}
+
+// Fuerza traer la copia de la nube y descarta el estado local, sin comparar
+// fechas. Es el "escape hatch" manual para cuando el usuario sabe que su
+// copia local no es la que quiere conservar (p. ej. editó el perfil por
+// error mientras estaba desconectado y luego lo sincronizó sin querer).
+export async function pullNow() {
+  if (!client || !currentUser) return { ok: false, error: 'No hay sesión activa.' };
+  cancelPendingPush();
+  if (!navigator.onLine) {
+    setStatus('offline');
+    return { ok: false, error: 'Sin conexión.' };
+  }
+  setStatus('syncing');
+  let row;
+  try {
+    row = await fetchRemoteRow();
+  } catch (err) {
+    setStatus('error', err.message);
+    return { ok: false, error: err.message };
+  }
+  if (!row) {
+    setStatus('synced');
+    return { ok: false, error: 'Todavía no hay ninguna copia guardada en la nube para esta cuenta.' };
+  }
+  adoptRemote(row);
+  setStatus('synced');
+  return { ok: true };
 }

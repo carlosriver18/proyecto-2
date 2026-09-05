@@ -200,12 +200,24 @@ function renderCloudSection(container, statusInfo) {
       <span class="badge">${statusIcon(status)}</span>
     </div>
     <div class="backup-actions">
-      <button class="btn btn-secondary" id="cloud-sync-now">Sincronizar ahora</button>
+      <button class="btn btn-secondary" id="cloud-sync-now">Sincronizar ahora (subir)</button>
+      <button class="btn btn-secondary" id="cloud-restore-now">Restaurar desde la nube (bajar)</button>
       <button class="btn btn-ghost" id="cloud-sign-out">Cerrar sesión</button>
     </div>
+    <p class="muted small">"Sincronizar" sube lo que ves en pantalla. "Restaurar" descarta lo local y trae lo que hay guardado en la nube — útil si editaste algo por error.</p>
   `;
   section.querySelector('#cloud-sync-now').addEventListener('click', () => {
     cloud.pushNow().catch((err) => showToast(err.message, 'error'));
+  });
+  section.querySelector('#cloud-restore-now').addEventListener('click', async () => {
+    if (!confirmAction('Esto descarta tus cambios locales no guardados en la nube y reemplaza tus datos con la última copia de la nube. ¿Continuar?')) return;
+    const result = await cloud.pullNow();
+    if (!result.ok) {
+      showToast(result.error, 'error');
+      return;
+    }
+    showToast('Datos restaurados desde la nube.', 'success');
+    setTimeout(() => window.location.reload(), 600);
   });
   section.querySelector('#cloud-sign-out').addEventListener('click', () => {
     cloud.signOut();
