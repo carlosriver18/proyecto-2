@@ -2,7 +2,7 @@
 // y permita registrar entrenamientos sin conexión. Sube CACHE_VERSION al publicar
 // cambios importantes para forzar la actualización de los clientes.
 
-const CACHE_VERSION = 'forgefit-v2';
+const CACHE_VERSION = 'forgefit-v3';
 const SCOPE_URL = new URL('./', self.registration.scope);
 
 const APP_SHELL = [
@@ -75,11 +75,21 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isSameOrigin) {
+    // Stale-while-revalidate: sirve el JS/CSS cacheado al instante (para que
+    // la app abra rápido y funcione offline), pero SIEMPRE pide la versión
+    // fresca en paralelo y la guarda para la próxima carga. Así un despliegue
+    // nuevo se auto-corrige en la recarga siguiente, sin depender de que
+    // alguien recuerde subir CACHE_VERSION en cada cambio.
     event.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request).then((res) => {
-        caches.open(CACHE_VERSION).then((cache) => cache.put(request, res.clone()));
-        return res;
-      }).catch(() => cached))
+      caches.match(request).then((cached) => {
+        const network = fetch(request)
+          .then((res) => {
+            caches.open(CACHE_VERSION).then((cache) => cache.put(request, res.clone()));
+            return res;
+          })
+          .catch(() => cached);
+        return cached || network;
+      })
     );
     return;
   }
