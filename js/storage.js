@@ -8,7 +8,13 @@ export const DATA_VERSION = 1;
 function seedData() {
   return {
     version: DATA_VERSION,
-    meta: { updatedAt: todayISOSafe() },
+    // `updatedAt: null` marca este estado como "recién sembrado, sin datos reales
+    // del usuario". La sincronización en la nube (js/sync/cloud.js) lo usa como
+    // señal para SIEMPRE adoptar la copia remota al iniciar sesión en un
+    // dispositivo nuevo, en vez de comparar marcas de tiempo — de lo contrario,
+    // un dispositivo recién sembrado podría "ganar" por segundos y sobrescribir
+    // datos reales en la nube con un perfil vacío.
+    meta: { updatedAt: null },
     profile: {
       name: '',
       age: null,
