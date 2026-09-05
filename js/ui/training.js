@@ -10,7 +10,7 @@ import {
   abandonSession, getRecommendedLoad,
 } from '../workouts.js';
 import { e1RM } from '../calculations.js';
-import { formatDate, formatDurationMs, escapeHtml } from '../utils.js';
+import { formatDate, formatDurationMs, formatSeconds, escapeHtml } from '../utils.js';
 import { navigate } from '../router.js';
 import { showToast, confirmAction, openModal, closeModal } from './common.js';
 import * as timer from '../timer.js';
@@ -98,7 +98,7 @@ function renderActiveSession(container, session, state) {
         <p class="eyebrow">${day?.day || ''} · SEMANA ${session.week}</p>
         <h1>${day?.title || session.dayTitle}</h1>
       </div>
-      <div class="elapsed-chip"><span id="elapsed-time">00:00</span></div>
+      <div class="elapsed-chip" title="Duración de la sesión"><span class="elapsed-label">Duración</span><span id="elapsed-time">00:00</span></div>
     </div>
 
     <details class="card warmup-card">
@@ -142,7 +142,7 @@ function startElapsedTicker(startedAt) {
   const tick = () => {
     const el = document.getElementById('elapsed-time');
     if (!el) { clearElapsedTicker(); return; }
-    el.textContent = formatDurationMs(Date.now() - start).replace('min', '').trim();
+    el.textContent = formatSeconds((Date.now() - start) / 1000);
   };
   tick();
   elapsedIntervalId = setInterval(tick, 1000);
