@@ -16,8 +16,8 @@
 // Si se dejan vacíos, ForgeFit funciona exactamente igual pero solo local
 // (sin la sección "Cuenta y sincronización" en Perfil).
 
-export const SUPABASE_URL = '';
-export const SUPABASE_ANON_KEY = '';
+export const SUPABASE_URL = 'https://dgdpcrlvgfplrtxzfudf.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_1x5xJJMZBzkEvBj10cNwAQ_dhtVr_dy';
 
 export function isConfigured() {
   return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
