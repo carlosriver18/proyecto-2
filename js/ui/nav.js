@@ -56,7 +56,7 @@ export function renderNav() {
       <span class="brand-mark">FF</span>
       <div>
         <strong>ForgeFit</strong>
-        <span class="muted small">v1.0.0</span>
+        <span class="muted small">v1.1.0</span>
       </div>
     </div>
     <nav class="sidebar-nav" aria-label="Navegación principal">

@@ -8,6 +8,7 @@ export const DATA_VERSION = 1;
 function seedData() {
   return {
     version: DATA_VERSION,
+    meta: { updatedAt: todayISOSafe() },
     profile: {
       name: '',
       age: null,
@@ -82,6 +83,9 @@ function migrate(raw) {
   // Punto de extensión: si DATA_VERSION sube, encadenar migraciones aquí.
   if (!raw.version || raw.version < DATA_VERSION) {
     raw.version = DATA_VERSION;
+  }
+  if (!raw.meta) {
+    raw.meta = { updatedAt: todayISOSafe() };
   }
   return raw;
 }

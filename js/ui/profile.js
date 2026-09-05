@@ -1,11 +1,14 @@
 import { getState, setState } from '../state.js';
 import { REST_PRESETS } from '../data.js';
-import { uid, todayISO, clamp, escapeHtml } from '../utils.js';
+import { uid, todayISO, clamp, escapeHtml, formatDateTime } from '../utils.js';
 import { exportJSON, importJSON, sessionsToCSV, resetAll } from '../storage.js';
 import { showToast, confirmAction } from './common.js';
 import { applyTheme } from './theme.js';
 import { analyzeRecovery } from '../ai/coach.js';
 import { EXERCISES } from '../data.js';
+import * as cloud from '../sync/cloud.js';
+
+let unsubscribeCloudStatus = null;
 
 const GOALS = [
   { value: 'strength', label: 'Fuerza' },
@@ -112,13 +115,15 @@ export function renderProfile(container) {
       </div>
     </section>
 
+    <section class="card" id="cloud-section"></section>
+
     <section class="card danger-zone">
       <h3>Zona de riesgo</h3>
       <p class="muted small">Borra todos tus datos locales (perfil, sesiones, PRs, mediciones) y reinicia la app.</p>
       <button class="btn btn-danger" id="reset-data">Reiniciar todos los datos</button>
     </section>
 
-    <p class="muted small version-tag">ForgeFit v1.0.0</p>
+    <p class="muted small version-tag">ForgeFit v1.1.0</p>
   `;
 
   renderRecoveryStatus(container, recoveryToday);
@@ -127,6 +132,115 @@ export function renderProfile(container) {
   wireMetricsForm(container);
   wireRecoveryForm(container, todayStr);
   wireBackup(container);
+  mountCloudSection(container);
+}
+
+const CLOUD_STATUS_LABELS = {
+  signed_out: 'No conectado',
+  syncing: 'Sincronizando…',
+  synced: 'Sincronizado',
+  error: 'Error de sincronización',
+  offline: 'Sin conexión (se sincronizará al reconectar)',
+};
+
+function mountCloudSection(container) {
+  if (unsubscribeCloudStatus) unsubscribeCloudStatus();
+
+  if (!cloud.isCloudConfigured()) {
+    renderCloudDisabled(container);
+    return;
+  }
+
+  const renderCurrent = () => renderCloudSection(container, cloud.getStatus());
+  renderCurrent();
+  unsubscribeCloudStatus = cloud.onStatusChange(renderCurrent);
+}
+
+function renderCloudDisabled(container) {
+  const section = container.querySelector('#cloud-section');
+  section.innerHTML = `
+    <h3>Cuenta y sincronización en la nube</h3>
+    <p class="muted small">La sincronización en la nube no está configurada en este despliegue. Sigue las instrucciones de <code>supabase/schema.sql</code> y <code>js/sync/config.js</code> en el README para activarla. Mientras tanto, tus datos siguen guardándose en este dispositivo.</p>
+  `;
+}
+
+function renderCloudSection(container, statusInfo) {
+  const section = container.querySelector('#cloud-section');
+  if (!section) {
+    if (unsubscribeCloudStatus) { unsubscribeCloudStatus(); unsubscribeCloudStatus = null; }
+    return;
+  }
+  const { status, user, error } = statusInfo;
+
+  if (status === 'signed_out' || status === 'disabled') {
+    section.innerHTML = `
+      <h3>Cuenta y sincronización en la nube</h3>
+      <p class="muted small">Crea una cuenta o inicia sesión para respaldar tus entrenamientos en la nube y recuperarlos desde otro dispositivo.</p>
+      <form id="cloud-auth-form" class="form-grid">
+        <label>Correo<input type="email" name="email" required autocomplete="email"></label>
+        <label>Contraseña<input type="password" name="password" required minlength="6" autocomplete="current-password"></label>
+        <div class="form-row wide">
+          <button class="btn btn-secondary" type="submit" data-mode="signin">Iniciar sesión</button>
+          <button class="btn btn-primary" type="submit" data-mode="signup">Crear cuenta</button>
+        </div>
+      </form>
+    `;
+    wireCloudAuthForm(section);
+    return;
+  }
+
+  section.innerHTML = `
+    <h3>Cuenta y sincronización en la nube</h3>
+    <div class="card-head">
+      <div>
+        <strong>${escapeHtml(user?.email || '')}</strong>
+        <p class="muted small">${CLOUD_STATUS_LABELS[status] || status}${error ? ` — ${escapeHtml(error)}` : ''}</p>
+        <p class="muted small">Última actualización local: ${formatDateTime(getState().meta?.updatedAt)}</p>
+      </div>
+      <span class="badge">${statusIcon(status)}</span>
+    </div>
+    <div class="backup-actions">
+      <button class="btn btn-secondary" id="cloud-sync-now">Sincronizar ahora</button>
+      <button class="btn btn-ghost" id="cloud-sign-out">Cerrar sesión</button>
+    </div>
+  `;
+  section.querySelector('#cloud-sync-now').addEventListener('click', () => {
+    cloud.pushNow().catch((err) => showToast(err.message, 'error'));
+  });
+  section.querySelector('#cloud-sign-out').addEventListener('click', () => {
+    cloud.signOut();
+  });
+}
+
+function statusIcon(status) {
+  return { syncing: '…', synced: '✓', error: '!', offline: '⏸' }[status] || '';
+}
+
+function wireCloudAuthForm(section) {
+  const form = section.querySelector('#cloud-auth-form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const mode = e.submitter?.dataset.mode || 'signin';
+    const fd = new FormData(form);
+    const email = fd.get('email').trim();
+    const password = fd.get('password');
+    try {
+      if (mode === 'signup') {
+        const { needsEmailConfirmation } = await cloud.signUp(email, password);
+        showToast(
+          needsEmailConfirmation
+            ? 'Cuenta creada. Revisa tu correo para confirmarla y luego inicia sesión.'
+            : 'Cuenta creada e iniciada.',
+          'success'
+        );
+      } else {
+        await cloud.signIn(email, password);
+        showToast('Sesión iniciada. Sincronizando datos…', 'success');
+      }
+    } catch (err) {
+      showToast(err.message || 'No se pudo completar la operación.', 'error');
+    }
+  });
 }
 
 function renderRecoveryStatus(container, recoveryToday) {

@@ -28,9 +28,15 @@ function notify() {
   });
 }
 
-// updater puede ser un objeto (merge superficial) o una función (state) => state
-export function setState(updater, { persist = true } = {}) {
-  const next = typeof updater === 'function' ? updater(state) : { ...state, ...updater };
+// updater puede ser un objeto (merge superficial) o una función (state) => state.
+// `touch` marca el estado con la hora actual (usado por la sincronización en la
+// nube para decidir qué copia es más reciente); se desactiva al adoptar un estado
+// remoto para conservar su marca de tiempo original en vez de pisarla.
+export function setState(updater, { persist = true, touch = true } = {}) {
+  let next = typeof updater === 'function' ? updater(state) : { ...state, ...updater };
+  if (touch) {
+    next = { ...next, meta: { ...(next.meta || {}), updatedAt: new Date().toISOString() } };
+  }
   state = next;
   if (persist) {
     const result = storage.save(state);

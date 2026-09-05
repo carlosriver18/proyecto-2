@@ -2,7 +2,7 @@
 // y permita registrar entrenamientos sin conexión. Sube CACHE_VERSION al publicar
 // cambios importantes para forzar la actualización de los clientes.
 
-const CACHE_VERSION = 'forgefit-v1';
+const CACHE_VERSION = 'forgefit-v2';
 const SCOPE_URL = new URL('./', self.registration.scope);
 
 const APP_SHELL = [
@@ -22,6 +22,8 @@ const APP_SHELL = [
   'js/router.js',
   'js/utils.js',
   'js/ai/coach.js',
+  'js/sync/config.js',
+  'js/sync/cloud.js',
   'js/ui/common.js',
   'js/ui/nav.js',
   'js/ui/onboarding.js',

@@ -13,6 +13,7 @@ import { renderPRs } from './ui/prs.js';
 import { renderProfile } from './ui/profile.js';
 import { renderMore } from './ui/more.js';
 import * as timer from './timer.js';
+import * as cloud from './sync/cloud.js';
 
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
@@ -69,6 +70,10 @@ function init() {
 
   registerServiceWorker();
   maybeShowOnboarding();
+
+  if (cloud.isCloudConfigured()) {
+    cloud.init().catch((err) => console.error('Error iniciando sincronización en la nube', err));
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
