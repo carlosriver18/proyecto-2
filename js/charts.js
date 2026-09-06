@@ -4,6 +4,7 @@
 
 import { e1RM } from './calculations.js';
 import { dateOnly, startOfWeek } from './utils.js';
+import { PROGRAM_DAYS } from './data.js';
 
 const registry = new Map();
 
@@ -181,7 +182,7 @@ export function renderWeeklyVolumeChart(canvasId, sessions, weeks = 8) {
   renderBar(canvasId, buckets.map((b) => b.label), [{ label: 'Volumen semanal (kg)', data: buckets.map((b) => b.value), backgroundColor: PALETTE.line }]);
 }
 
-export function renderComplianceChart(canvasId, sessions, weeks = 8, plannedPerWeek = 5) {
+export function renderComplianceChart(canvasId, sessions, weeks = 8, plannedPerWeek = PROGRAM_DAYS.length) {
   const buckets = [];
   const now = new Date();
   for (let i = weeks - 1; i >= 0; i -= 1) {

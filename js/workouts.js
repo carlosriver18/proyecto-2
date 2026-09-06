@@ -230,7 +230,7 @@ export function completeSession() {
 }
 
 export function getWeekProgress(state = getState()) {
-  const compliance = weeklyCompliance(state.sessions, 5);
+  const compliance = weeklyCompliance(state.sessions);
   const streak = computeStreak(state.sessions);
   return { ...compliance, streak };
 }

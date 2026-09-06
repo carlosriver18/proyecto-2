@@ -133,9 +133,10 @@ function renderDetail(container, sessionId) {
 
 function renderExerciseDetail(sessionExercise) {
   const exercise = EXERCISES[sessionExercise.exerciseId];
+  const name = exercise?.name || sessionExercise.exerciseId;
   return `
     <article class="card">
-      <h4>${exercise.name}${sessionExercise.note ? ` <span class="muted small">— ${escapeHtml(sessionExercise.note)}</span>` : ''}</h4>
+      <h4>${name}${sessionExercise.note ? ` <span class="muted small">— ${escapeHtml(sessionExercise.note)}</span>` : ''}</h4>
       <table class="detail-table">
         <thead><tr><th>#</th><th>Peso</th><th>Reps</th><th>RIR</th><th>RPE</th><th>✓</th></tr></thead>
         <tbody>

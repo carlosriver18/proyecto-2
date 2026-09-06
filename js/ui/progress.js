@@ -16,7 +16,7 @@ let selectedRange = 'all';
 let selectedLiftExercise = 'bench_press';
 let selectedE1rmExercise = 'bench_press';
 
-const KEY_LIFTS = ['bench_press', 'squat', 'rdl'];
+const KEY_LIFTS = ['bench_press', 'squat', 'deadlift', 'ohp_db'];
 
 export function renderProgress(container) {
   const state = getState();
@@ -85,5 +85,5 @@ function drawCharts(state) {
   renderLiftChart('chart-lift', state.sessions, selectedLiftExercise, EXERCISES[selectedLiftExercise].name, selectedRange);
   renderE1RMChart('chart-e1rm', state.sessions, selectedE1rmExercise, EXERCISES[selectedE1rmExercise].name, selectedRange);
   renderWeeklyVolumeChart('chart-volume', state.sessions, 8);
-  renderComplianceChart('chart-compliance', state.sessions, 8, 5);
+  renderComplianceChart('chart-compliance', state.sessions, 8);
 }

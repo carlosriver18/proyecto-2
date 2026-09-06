@@ -10,7 +10,7 @@ No es una landing page: es la app que se usa a diario, en el celular o la comput
 - **Entrenamiento**: registro por serie (peso, reps, RIR o RPE), carga objetivo y rendimiento anterior visibles, marcar serie completa, agregar/eliminar series, notas por ejercicio y por sesión, calentamiento separado del volumen de trabajo.
 - **Temporizador de descanso**: widget flotante global (60/90/120/150/180 s configurables), +15 s, +30 s, omitir, vibración y sonido al terminar.
 - **Resumen de sesión**: duración, series, repeticiones, volumen, PRs, RIR promedio y mensajes contextuales.
-- **Plan de 8 semanas**: rutina de 5 días (Empuje / Pierna + pie / Tirón / Posterior + core / Full body), periodización por fases y semana de *deload* (semana 8) con reducción visual de carga y volumen.
+- **Plan de 8 semanas**: split Torso/Pierna x2 (4 días: Torso A / Pierna A / Torso B / Pierna B), pensado para Fuerza a nivel intermedio — cada patrón principal (press de banca, sentadilla, press militar, peso muerto) aparece 2 veces por semana, una pesada (3-5 reps) y otra de volumen. Periodización por fases y semana de *deload* (semana 8) con reducción visual de carga y volumen.
 - **Motor de progresión**: aumenta, mantiene o reduce la carga de cada ejercicio según reps, RIR y series completadas de la sesión anterior — no son incrementos fijos.
 - **PRs automáticos**: mayor peso, mayor 1RM estimado (Epley), mayor volumen y mejor rendimiento de repeticiones a una carga dada.
 - **Historial**: lista filtrable por fecha/ejercicio/grupo muscular, con detalle serie a serie de cada sesión.

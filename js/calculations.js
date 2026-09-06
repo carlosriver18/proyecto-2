@@ -1,6 +1,6 @@
 // Funciones de cálculo puras: volumen, e1RM, RIR/RPE, promedios, agregados por grupo muscular.
 
-import { EXERCISES } from './data.js';
+import { EXERCISES, PROGRAM_DAYS } from './data.js';
 import { startOfWeek, roundTo1 } from './utils.js';
 
 export function setVolume(set) {
@@ -118,7 +118,7 @@ export function weeklySetsByMuscleGroup(sessions, referenceDate = new Date()) {
   return volumeByMuscleGroup(weekSessions);
 }
 
-export function weeklyCompliance(sessions, totalPlannedPerWeek = 5, referenceDate = new Date()) {
+export function weeklyCompliance(sessions, totalPlannedPerWeek = PROGRAM_DAYS.length, referenceDate = new Date()) {
   const start = startOfWeek(referenceDate).getTime();
   const end = start + 7 * 86400000;
   const completed = sessions.filter((s) => {

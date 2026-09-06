@@ -286,7 +286,7 @@ th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--bor
 }
 
 @media (min-width: 1024px) {
-  .week-grid { grid-template-columns: repeat(5, 1fr); }
+  .week-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
   .set-row { grid-template-columns: 24px 100px 100px 74px 74px 44px 30px; }
 }
 
